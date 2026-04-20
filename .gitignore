@@ -1,0 +1,4 @@
+bin
+.dotnet
+.vscode
+obj
