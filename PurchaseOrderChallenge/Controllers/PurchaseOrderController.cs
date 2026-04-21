@@ -84,6 +84,40 @@ namespace PurchaseOrderChallenge.Controllers
             }
         }
 
-        
+        [HttpPut("{id}/resubmit")]
+        public ActionResult<PurchaseRequest> Resubmit(int id, PurchaseRequest resubmit)
+        {
+            try
+            {
+                var order = _purchaseOrderService.ResubmitPurchaseRequest(id, resubmit);
+                return Ok(order);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "Pedido não encontrado.")
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}/cancel")]
+        public ActionResult<PurchaseRequest> Cancel(int id, PurchaseRequestActionRequest cancellation)
+        {
+            try
+            {
+                var order = _purchaseOrderService.CancelPurchaseRequest(id, cancellation);
+                return Ok(order);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "Pedido não encontrado.")
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
