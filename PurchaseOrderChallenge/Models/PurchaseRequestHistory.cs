@@ -6,6 +6,7 @@ public class PurchaseRequestHistory
 {
     public int Id { get; set; }
     public int PurchaseRequestId { get; set; }
+    public PurchaseRequest? PurchaseRequest { get; set; }
     public HistoryActionType ActionType { get; set; }
     public required string PerformedBy { get; set; }
     public UserRole PerformedByRole { get; set; }

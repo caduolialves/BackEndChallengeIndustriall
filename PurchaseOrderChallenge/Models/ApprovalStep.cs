@@ -5,7 +5,8 @@ namespace PurchaseOrderChallenge.Models;
 public class ApprovalStep
 {
     public int Id { get; set; }
-    public int PurchaseOrderId { get; set; }
+    public int PurchaseRequestId { get; set; }
+    public PurchaseRequest? PurchaseRequest { get; set; }
     public UserRole ApproverRole { get; set; }
     public int Sequence { get; set; }
     public ApprovalStepStatus Status { get; set; }

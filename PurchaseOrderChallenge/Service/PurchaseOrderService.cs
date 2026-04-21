@@ -254,7 +254,7 @@ public class PurchaseOrderService
             .Select((role, index) => new ApprovalStep
             {
                 Id = index + 1,
-                PurchaseOrderId = request.Id,
+                PurchaseRequestId = request.Id,
                 ApproverRole = role,
                 Sequence = index + 1,
                 Status = ApprovalStepStatus.Pending

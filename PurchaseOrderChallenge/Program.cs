@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Injeção de dependência para o serviço de pedidos de compra
 builder.Services.AddSingleton<PurchaseOrderService>();
+builder.Services.AddDbContext<PurchaseOrderDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
