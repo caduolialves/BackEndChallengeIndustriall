@@ -5,15 +5,10 @@ using PurchaseOrderChallenge.Repository.Interfaces;
 
 namespace PurchaseOrderChallenge.Repository;
 
-
-public class PurchaseRequestRepository : IPurchaseRequestRepository
+public class PurchaseRequestRepository(PurchaseOrderDbContext context) 
+    : IPurchaseRequestRepository
 {
-    private readonly PurchaseOrderDbContext _context;
-
-    public PurchaseRequestRepository(PurchaseOrderDbContext context)
-    {
-        _context = context;
-    }
+    private readonly PurchaseOrderDbContext _context = context;
 
     public IEnumerable<PurchaseRequest> GetAll()
     {

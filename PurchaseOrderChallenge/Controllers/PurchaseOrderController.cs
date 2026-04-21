@@ -49,7 +49,9 @@ namespace PurchaseOrderChallenge.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        public ActionResult<PurchaseRequest> Approve(int id, PurchaseRequestActionRequest approval)
+        public ActionResult<PurchaseRequest> Approve(
+            int id, 
+            PurchaseRequestActionRequest approval)
         {
             try
             {
@@ -67,7 +69,9 @@ namespace PurchaseOrderChallenge.Controllers
         }
 
         [HttpPut("{id}/review")]
-        public ActionResult<PurchaseRequest> Review(int id, PurchaseRequestActionRequest review)
+        public ActionResult<PurchaseRequest> Review(
+            int id, 
+            PurchaseRequestActionRequest review)
         {
             try
             {
@@ -85,7 +89,9 @@ namespace PurchaseOrderChallenge.Controllers
         }
 
         [HttpPut("{id}/resubmit")]
-        public ActionResult<PurchaseRequest> Resubmit(int id, PurchaseRequest resubmit)
+        public ActionResult<PurchaseRequest> Resubmit(
+            int id, 
+            PurchaseRequest resubmit)
         {
             try
             {
@@ -103,7 +109,9 @@ namespace PurchaseOrderChallenge.Controllers
         }
 
         [HttpPut("{id}/cancel")]
-        public ActionResult<PurchaseRequest> Cancel(int id, PurchaseRequestActionRequest cancellation)
+        public ActionResult<PurchaseRequest> Cancel(
+            int id, 
+            PurchaseRequestActionRequest cancellation)
         {
             try
             {

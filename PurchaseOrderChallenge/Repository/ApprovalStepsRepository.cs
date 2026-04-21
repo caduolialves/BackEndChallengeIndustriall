@@ -5,14 +5,10 @@ using PurchaseOrderChallenge.Repository.Interfaces;
 
 namespace PurchaseOrderChallenge.Repository
 {
-    public class ApprovalStepsRepository : IApprovalStepsRepository
+    public class ApprovalStepsRepository(PurchaseOrderDbContext context) : IApprovalStepsRepository
     {
-        private readonly PurchaseOrderDbContext _context;
+        private readonly PurchaseOrderDbContext _context = context;
 
-        public ApprovalStepsRepository(PurchaseOrderDbContext context)
-        {
-            _context = context;
-        }
         public IEnumerable<ApprovalStep> GetAllByStatus(int id, ApprovalStepStatus status)
         {
             return _context.ApprovalSteps
@@ -23,6 +19,5 @@ namespace PurchaseOrderChallenge.Repository
         {
             return GetAllByStatus(id, status).FirstOrDefault();
         }
-
     }
 }

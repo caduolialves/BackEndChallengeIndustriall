@@ -6,19 +6,18 @@ using PurchaseOrderChallenge.Service.Interfaces;
 
 namespace PurchaseOrderChallenge.Service;
 
-public class PurchaseOrderService : IPurchaseOrderService
+public class PurchaseOrderService(
+        IPurchaseRequestRepository repository,
+        IApprovalStepsRepository approvalStepsRepository,
+        IPurchaseRequestHistoryRepository purchaseRequestHistoryRepository) 
+    : IPurchaseOrderService
 {
-    private readonly IPurchaseRequestRepository _purchaseRequestRepository;
-    private readonly IApprovalStepsRepository _approvalStepsRepository;
-
-    private readonly IPurchaseRequestHistoryRepository _purchaseRequestHistoryRepository;
-
-    public PurchaseOrderService(IPurchaseRequestRepository repository, IApprovalStepsRepository approvalStepsRepository, IPurchaseRequestHistoryRepository purchaseRequestHistoryRepository)
-    {
-        _purchaseRequestRepository = repository;
+    private readonly IPurchaseRequestRepository _purchaseRequestRepository = repository;
+    private readonly IApprovalStepsRepository 
         _approvalStepsRepository = approvalStepsRepository;
+    private readonly IPurchaseRequestHistoryRepository 
         _purchaseRequestHistoryRepository = purchaseRequestHistoryRepository;
-    }
+
 
     /// <summary>
     /// Cria um novo pedido de compra, calcula o total, define as etapas de aprovação
@@ -75,7 +74,8 @@ public class PurchaseOrderService : IPurchaseOrderService
     public PurchaseRequest ApprovePurchaseRequest(int id, PurchaseRequestActionRequest approval)
     {
         // Localiza o pedido antes de validar qualquer regra de aprovação.
-        var request = GetPurchaseRequestsById(id) ?? throw new InvalidOperationException("Pedido não encontrado.");
+        var request = GetPurchaseRequestsById(id) 
+            ?? throw new InvalidOperationException("Pedido não encontrado.");
 
         // Impede aprovar novamente um pedido cujo fluxo já foi concluído.
         if (request.PurchaseRequestStatus == PurchaseRequestStatus.Approved)
@@ -86,14 +86,21 @@ public class PurchaseOrderService : IPurchaseOrderService
             throw new InvalidOperationException("O pedido está em revisão e não pode ser aprovado.");
 
         // RN4: a etapa atual é sempre a primeira pendente na sequência de aprovação.
-        var currentStep = _approvalStepsRepository.GetByStatus(request.Id, ApprovalStepStatus.Pending) ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
+        var currentStep = _approvalStepsRepository.GetByStatus(
+                request.Id,
+                ApprovalStepStatus.Pending) 
+            ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
 
         // Garante que o aprovador informado corresponde exatamente à etapa atual.
         if (currentStep.ApproverRole != approval.ApproverRole)
-            throw new InvalidOperationException($"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
+            throw new InvalidOperationException(
+                $"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
 
         // Marca a etapa atual como aprovada e registra quem executou a ação.
-        CreateNewCurrentStep(approval, currentStep, ApprovalStepStatus.Approved);
+        CreateNewCurrentStep(
+            approval,
+            currentStep,
+            ApprovalStepStatus.Approved);
 
         // Mantém um histórico separado das etapas para auditoria do pedido.
         _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
@@ -106,7 +113,9 @@ public class PurchaseOrderService : IPurchaseOrderService
         });
 
         // Depois da aprovação, verifica se ainda existe alguma etapa pendente.
-        var nextStep = _approvalStepsRepository.GetByStatus(request.Id, ApprovalStepStatus.Pending);
+        var nextStep = _approvalStepsRepository.GetByStatus(
+            request.Id,
+            ApprovalStepStatus.Pending);
 
         // Se não houver próxima etapa, todas as alçadas exigidas já aprovaram o pedido.
         if (nextStep is null)
@@ -136,21 +145,28 @@ public class PurchaseOrderService : IPurchaseOrderService
     /// Solicita revisão do pedido na etapa atual de aprovação.
     /// O pedido sai temporariamente do fluxo até ser reapresentado.
     /// </summary>
-    public PurchaseRequest ReviewPurchaseRequest(int id, PurchaseRequestActionRequest review)
+    public PurchaseRequest ReviewPurchaseRequest(
+        int id,
+        PurchaseRequestActionRequest review)
     {
         // Busca o pedido antes de aplicar as regras de solicitação de revisão.
-        var request = GetPurchaseRequestsById(id) ?? throw new InvalidOperationException("Pedido não encontrado.");
+        var request = GetPurchaseRequestsById(id) 
+            ?? throw new InvalidOperationException("Pedido não encontrado.");
 
         // Evita solicitar revisão repetida para um pedido que já está nesse estado.
         if (request.PurchaseRequestStatus == PurchaseRequestStatus.InReview)
             throw new InvalidOperationException("O pedido já está em revisão.");
 
         // A revisão também respeita a sequência: só o responsável pela etapa atual pode solicitá-la.
-        var currentStep = _approvalStepsRepository.GetByStatus(request.Id, ApprovalStepStatus.Pending) ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
+        var currentStep = _approvalStepsRepository.GetByStatus(
+                request.Id,
+                ApprovalStepStatus.Pending) 
+            ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
 
         // Bloqueia revisão por um papel que ainda não recebeu o pedido.
         if (currentStep.ApproverRole != review.ApproverRole)
-            throw new InvalidOperationException($"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
+            throw new InvalidOperationException(
+                $"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
 
         // O status InReview sinaliza que o pedido saiu temporariamente do fluxo de aprovação.
         request.PurchaseRequestStatus = PurchaseRequestStatus.InReview;
@@ -184,7 +200,8 @@ public class PurchaseOrderService : IPurchaseOrderService
     public PurchaseRequest ResubmitPurchaseRequest(int id, PurchaseRequest request)
     {
         // Busca o pedido original para preservar histórico e dados do fluxo.
-        var currentRequest = GetPurchaseRequestsById(id) ?? throw new InvalidOperationException("Pedido não encontrado.");
+        var currentRequest = GetPurchaseRequestsById(id) 
+            ?? throw new InvalidOperationException("Pedido não encontrado.");
 
         if (currentRequest.PurchaseRequestStatus != PurchaseRequestStatus.InReview)
             throw new InvalidOperationException("O pedido necessita estar em revisão.");
@@ -219,10 +236,13 @@ public class PurchaseOrderService : IPurchaseOrderService
     /// Cancela um pedido ainda não aprovado, marca as etapas pendentes como canceladas
     /// e registra o cancelamento no histórico.
     /// </summary>
-    public PurchaseRequest CancelPurchaseRequest(int id, PurchaseRequestActionRequest cancellation)
+    public PurchaseRequest CancelPurchaseRequest(
+        int id,
+        PurchaseRequestActionRequest cancellation)
     {
         // Localiza o pedido antes de validar as regras de cancelamento.
-        var request = GetPurchaseRequestsById(id) ?? throw new InvalidOperationException("Pedido não encontrado.");
+        var request = GetPurchaseRequestsById(id) 
+            ?? throw new InvalidOperationException("Pedido não encontrado.");
 
         // Evita registrar o mesmo cancelamento mais de uma vez.
         if (request.PurchaseRequestStatus == PurchaseRequestStatus.Cancelled)
@@ -238,7 +258,9 @@ public class PurchaseOrderService : IPurchaseOrderService
         // Etapas ainda pendentes também são encerradas para não restar aprovação aberta.
 
 
-        foreach (var step in _approvalStepsRepository.GetAllByStatus(request.Id, ApprovalStepStatus.Pending))
+        foreach (var step in _approvalStepsRepository.GetAllByStatus(
+            request.Id,
+            ApprovalStepStatus.Pending))
         {
             CreateNewCurrentStep(cancellation, step, ApprovalStepStatus.Cancelled);
         }
@@ -263,7 +285,8 @@ public class PurchaseOrderService : IPurchaseOrderService
     /// </summary>
     private static void CalculateTotalAmount(PurchaseRequest request)
     {
-        request.TotalAmount = request.Items.Sum(item => item.Quantity * item.UnitPrice);
+        request.TotalAmount = request.Items
+            .Sum(item => item.Quantity * item.UnitPrice);
     }
 
     /// <summary>
@@ -275,15 +298,14 @@ public class PurchaseOrderService : IPurchaseOrderService
         var approverRoles = GetApprovalFlow(request.TotalAmount);
 
         // Depois transforma cada papel em uma etapa sequencial pendente.
-        return approverRoles
+        return [.. approverRoles
             .Select((role, index) => new ApprovalStep
             {
                 PurchaseRequestId = request.Id,
                 ApproverRole = role,
                 Sequence = index + 1,
                 Status = ApprovalStepStatus.Pending
-            })
-            .ToList();
+            })];
     }
 
     /// <summary>
@@ -292,15 +314,12 @@ public class PurchaseOrderService : IPurchaseOrderService
     private static UserRole[] GetApprovalFlow(decimal totalAmount)
     {
         // Até R$ 100,00: somente Suprimentos aprova.
-        if (totalAmount <= 100)
-            return [UserRole.Supply];
-
-        // Acima de R$ 100,00 e até R$ 1.000,00: Suprimentos e Gestor aprovam.
-        if (totalAmount <= 1000)
-            return [UserRole.Supply, UserRole.Manager];
-
-        // Acima de R$ 1.000,00: Suprimentos, Gestor e Diretor aprovam.
-        return [UserRole.Supply, UserRole.Manager, UserRole.Director];
+        return totalAmount switch
+        {
+            <= 100 => [UserRole.Supply],
+            <= 1000 => [UserRole.Supply, UserRole.Manager],
+            _ => [UserRole.Supply, UserRole.Manager, UserRole.Director]
+        };
     }
 
     /// <summary>
@@ -317,7 +336,10 @@ public class PurchaseOrderService : IPurchaseOrderService
         };
     }
 
-    private static void CreateNewCurrentStep(PurchaseRequestActionRequest actionRequest, ApprovalStep currentStep, ApprovalStepStatus status)
+    private static void CreateNewCurrentStep(
+        PurchaseRequestActionRequest actionRequest,
+        ApprovalStep currentStep,
+        ApprovalStepStatus status)
     {
         currentStep.Status = status;
         currentStep.ActionBy = actionRequest.ActionBy;
