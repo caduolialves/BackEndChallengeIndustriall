@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Models;
+using PurchaseOrderChallenge.Repository.Interfaces;
 
 namespace PurchaseOrderChallenge.Repository;
 
 
-public class PurchaseRequestRepository
+public class PurchaseRequestRepository : IPurchaseRequestRepository
 {
     private readonly PurchaseOrderDbContext _context;
 

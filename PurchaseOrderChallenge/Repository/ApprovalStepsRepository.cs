@@ -1,10 +1,11 @@
 using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Models.Enums;
+using PurchaseOrderChallenge.Repository.Interfaces;
 
 namespace PurchaseOrderChallenge.Repository
 {
-    public class ApprovalStepsRepository
+    public class ApprovalStepsRepository : IApprovalStepsRepository
     {
         private readonly PurchaseOrderDbContext _context;
 

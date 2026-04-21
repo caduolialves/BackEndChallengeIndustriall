@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PurchaseOrderChallenge.Models;
-using PurchaseOrderChallenge.Service;
+using PurchaseOrderChallenge.Service.Interfaces;
 using PurchaseOrderChallenge.Models.DTOs;
 
 namespace PurchaseOrderChallenge.Controllers
@@ -8,10 +8,10 @@ namespace PurchaseOrderChallenge.Controllers
     [ApiController]
     [Route("api/[controller]")]
     public class PurchaseOrderController(
-        PurchaseOrderService purchaseOrderService
+        IPurchaseOrderService purchaseOrderService
     ) : ControllerBase
     {
-        private readonly PurchaseOrderService _purchaseOrderService = purchaseOrderService;
+        private readonly IPurchaseOrderService _purchaseOrderService = purchaseOrderService;
 
         [HttpGet]
         public ActionResult<PurchaseRequest> Get()

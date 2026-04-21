@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Models;
+using PurchaseOrderChallenge.Repository.Interfaces;
 
 namespace PurchaseOrderChallenge.Repository
 {
-    public class PurchaseRequestHistoryRepository
+    public class PurchaseRequestHistoryRepository : IPurchaseRequestHistoryRepository
     {
         private readonly PurchaseOrderDbContext _context;
 

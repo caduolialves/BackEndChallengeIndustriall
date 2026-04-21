@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Repository;
+using PurchaseOrderChallenge.Repository.Interfaces;
 using PurchaseOrderChallenge.Service;
+using PurchaseOrderChallenge.Service.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<PurchaseOrderDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<PurchaseOrderService>();
-builder.Services.AddScoped<PurchaseRequestRepository>();
-builder.Services.AddScoped<ApprovalStepsRepository>();
-builder.Services.AddScoped<PurchaseRequestHistoryRepository>();
+builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+builder.Services.AddScoped<IPurchaseRequestRepository, PurchaseRequestRepository>();
+builder.Services.AddScoped<IApprovalStepsRepository, ApprovalStepsRepository>();
+builder.Services.AddScoped<IPurchaseRequestHistoryRepository, PurchaseRequestHistoryRepository>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

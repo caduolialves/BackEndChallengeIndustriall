@@ -1,18 +1,19 @@
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Models.Enums;
 using PurchaseOrderChallenge.Models.DTOs;
-using PurchaseOrderChallenge.Repository;
+using PurchaseOrderChallenge.Repository.Interfaces;
+using PurchaseOrderChallenge.Service.Interfaces;
 
 namespace PurchaseOrderChallenge.Service;
 
-public class PurchaseOrderService
+public class PurchaseOrderService : IPurchaseOrderService
 {
-    private readonly PurchaseRequestRepository _purchaseRequestRepository;
-    private readonly ApprovalStepsRepository _approvalStepsRepository;
+    private readonly IPurchaseRequestRepository _purchaseRequestRepository;
+    private readonly IApprovalStepsRepository _approvalStepsRepository;
 
-    private readonly PurchaseRequestHistoryRepository _purchaseRequestHistoryRepository;
+    private readonly IPurchaseRequestHistoryRepository _purchaseRequestHistoryRepository;
 
-    public PurchaseOrderService(PurchaseRequestRepository repository, ApprovalStepsRepository approvalStepsRepository, PurchaseRequestHistoryRepository purchaseRequestHistoryRepository)
+    public PurchaseOrderService(IPurchaseRequestRepository repository, IApprovalStepsRepository approvalStepsRepository, IPurchaseRequestHistoryRepository purchaseRequestHistoryRepository)
     {
         _purchaseRequestRepository = repository;
         _approvalStepsRepository = approvalStepsRepository;
