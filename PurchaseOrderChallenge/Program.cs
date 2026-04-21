@@ -8,14 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 // Injeção de dependência para o serviço de pedidos de compra
-builder.Services.AddSingleton<PurchaseOrderService>();
 builder.Services.AddDbContext<PurchaseOrderDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<PurchaseOrderService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        // Evitar ciclos de referência durante a serialização JSON
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

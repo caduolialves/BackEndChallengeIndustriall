@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Models.Enums;
 using PurchaseOrderChallenge.Models.DTOs;
@@ -8,6 +10,13 @@ public class PurchaseOrderService
 {
     private static readonly List<PurchaseRequest> _orders = new();
 
+    private readonly PurchaseOrderDbContext _context;
+
+    public PurchaseOrderService(PurchaseOrderDbContext context)
+    {
+        _context = context;
+    }
+
     /// <summary>
     /// Cria um novo pedido de compra, calcula o total, define as etapas de aprovação
     /// conforme a alçada e inicia o fluxo pendente em Suprimentos.
@@ -17,8 +26,6 @@ public class PurchaseOrderService
         // O total precisa existir antes da criação das etapas, pois a alçada depende dele.
         CalculateTotalAmount(request);
 
-        // Como os dados estão em memória, o serviço simula a geração automática do Id.
-        request.Id = request.Id == 0 ? GetNextId() : request.Id;
         request.CreatedAt = DateTime.UtcNow;
         request.UpdatedAt = request.CreatedAt;
 
@@ -31,7 +38,8 @@ public class PurchaseOrderService
         // Registra a criação do pedido no histórico para rastreabilidade.
         AddHistory(request, HistoryActionType.Created, request.RequesterName, UserRole.Requester, "Pedido criado.");
 
-        _orders.Add(request);
+        _context.PurchaseRequests.Add(request);
+        _context.SaveChanges();
     }
 
     /// <summary>
@@ -39,7 +47,7 @@ public class PurchaseOrderService
     /// </summary>
     public IEnumerable<PurchaseRequest> GetAllPurchaseRequests()
     {
-        return _orders;
+        return _context.PurchaseRequests;
     }
 
     /// <summary>
@@ -47,7 +55,11 @@ public class PurchaseOrderService
     /// </summary>
     public PurchaseRequest? GetPurchaseRequestsById(int id)
     {
-        return _orders.FirstOrDefault(x => x.Id == id);
+        return _context.PurchaseRequests
+            .Include(r => r.ApprovalSteps)
+            .Include(r => r.History)
+            .Include(r => r.Items)
+            .FirstOrDefault(x => x.Id == id);
     }
 
 
@@ -111,6 +123,9 @@ public class PurchaseOrderService
         }
 
         request.UpdatedAt = DateTime.UtcNow;
+
+        _context.PurchaseRequests.Update(request);
+        _context.SaveChanges();
         return request;
     }
 
@@ -158,6 +173,9 @@ public class PurchaseOrderService
             review.Comments ?? $"Revisão solicitada por {review.ApproverRole}.");
         
         request.UpdatedAt = DateTime.UtcNow;
+
+        _context.PurchaseRequests.Update(request);
+        _context.SaveChanges();
         return request;
     }
 
@@ -187,6 +205,9 @@ public class PurchaseOrderService
 
         SetPendingStatusByUserRole(currentRequest, UserRole.Supply);
         AddHistory(currentRequest, HistoryActionType.Resubmitted, currentRequest.RequesterName, UserRole.Requester, "Pedido revisado.");
+
+        _context.PurchaseRequests.Update(currentRequest);
+        _context.SaveChanges();
 
         return currentRequest;
     }
@@ -230,6 +251,8 @@ public class PurchaseOrderService
 
         request.UpdatedAt = DateTime.UtcNow;
 
+        _context.PurchaseRequests.Update(request);
+        _context.SaveChanges();
         return request;
     }
 
@@ -253,7 +276,6 @@ public class PurchaseOrderService
         return approverRoles
             .Select((role, index) => new ApprovalStep
             {
-                Id = index + 1,
                 PurchaseRequestId = request.Id,
                 ApproverRole = role,
                 Sequence = index + 1,
@@ -305,7 +327,6 @@ public class PurchaseOrderService
     {
         request.History.Add(new PurchaseRequestHistory
         {
-            Id = request.History.Count + 1,
             PurchaseRequestId = request.Id,
             ActionType = actionType,
             PerformedBy = performedBy,
@@ -314,14 +335,4 @@ public class PurchaseOrderService
             CreatedAt = DateTime.UtcNow
         });
     }
-
-    /// <summary>
-    /// Gera o próximo Id para pedidos armazenados em memória.
-    /// </summary>
-    private static int GetNextId()
-    {
-        // Simula o autoincremento que normalmente seria feito por um banco de dados.
-        return _orders.Count == 0 ? 1 : _orders.Max(order => order.Id) + 1;
-    }
-
 }
