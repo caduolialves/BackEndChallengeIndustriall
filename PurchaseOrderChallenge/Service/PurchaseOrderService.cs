@@ -37,17 +37,17 @@ public class PurchaseOrderService
         // Todo pedido começa aguardando a primeira aprovação: Suprimentos.
         SetPendingStatusByUserRole(request, UserRole.Supply);
 
+        var insertedRequest = _purchaseRequestRepository.Insert(request);
+
         // Registra a criação do pedido no histórico para rastreabilidade.
         _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
         {
-            PurchaseRequestId = request.Id,
+            PurchaseRequestId = insertedRequest.Id,
             ActionType = HistoryActionType.Created,
-            PerformedBy = request.RequesterName,
+            PerformedBy = insertedRequest.RequesterName,
             PerformedByRole = UserRole.Requester,
             Comments = "Pedido criado."
         });
-
-        _purchaseRequestRepository.Insert(request);
     }
 
     /// <summary>

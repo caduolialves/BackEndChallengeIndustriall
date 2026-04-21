@@ -28,10 +28,12 @@ public class PurchaseRequestRepository
             .FirstOrDefault(x => x.Id == id);
     }
 
-    public void Insert(PurchaseRequest request)
+    public PurchaseRequest Insert(PurchaseRequest request)
     {
-        _context.PurchaseRequests.Add(request);
+        var purchaseRequestAdded = _context.PurchaseRequests.Add(request);
         _context.SaveChanges();
+
+        return purchaseRequestAdded.Entity;
     }
 
     public PurchaseRequest Update(PurchaseRequest request)
