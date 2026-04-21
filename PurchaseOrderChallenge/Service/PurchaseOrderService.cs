@@ -1,5 +1,6 @@
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Models.Enums;
+using PurchaseOrderChallenge.Models.DTOs;
 
 namespace PurchaseOrderChallenge.Service;
 
@@ -31,18 +32,26 @@ public class PurchaseOrderService
         return _orders.FirstOrDefault(x => x.Id == id);
     }
 
-    public PurchaseRequest ApprovePurchaseRequest(int id, ApprovePurchaseRequest approval)
+
+    public PurchaseRequest ApprovePurchaseRequest(int id, PurchaseRequestActionRequest approval)
     {
         var request = GetPurchaseRequestsById(id) ?? throw new InvalidOperationException("Pedido não encontrado.");
 
+        // Validação para garantir que um pedido já aprovado não possa ser aprovado novamente, caso contrário retorna BadRequest.
         if (request.PurchaseRequestStatus == PurchaseRequestStatus.Approved)
             throw new InvalidOperationException("O pedido já está aprovado.");
 
+        // Validação para garantir que um pedido em revisão não possa ser aprovado, caso contrário retorna BadRequest.
+        if (request.PurchaseRequestStatus == PurchaseRequestStatus.InReview)
+            throw new InvalidOperationException("O pedido está em revisão e não pode ser aprovado.");
+
+        // Validação para garantir que um pedido em revisão não possa ser aprovado, caso contrário retorna BadRequest.
         var currentStep = request.ApprovalSteps
             .Where(step => step.Status == ApprovalStepStatus.Pending)
             .OrderBy(step => step.Sequence)
             .FirstOrDefault() ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
-        
+
+        // RN4: Validação para garantir que a aprovação seja feita na ordem correta das etapas, caso contrário retorna BadRequest.
         if (currentStep.ApproverRole != approval.ApproverRole)
             throw new InvalidOperationException($"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
 
@@ -58,11 +67,13 @@ public class PurchaseOrderService
             approval.ApproverRole,
             approval.Comments ?? $"Aprovado por {approval.ApproverRole}.");
 
+        // Atualização do status do pedido com base na etapa de aprovação atual, caso contrário retorna BadRequest.
         var nextStep = request.ApprovalSteps
             .Where(step => step.Status == ApprovalStepStatus.Pending)
             .OrderBy(step => step.Sequence)
             .FirstOrDefault();
 
+        // Atualização do status do pedido para "Aprovado" quando todas as etapas de aprovação forem concluídas, caso contrário retorna BadRequest.
         if (nextStep is null)
         {
             request.PurchaseRequestStatus = PurchaseRequestStatus.Approved;
@@ -73,6 +84,42 @@ public class PurchaseOrderService
             SetPendingStatusByUserRole(request, nextStep.ApproverRole);
         }
 
+        request.UpdatedAt = DateTime.UtcNow;
+        return request;
+    }
+
+    public PurchaseRequest ReviewPurchaseRequest(int id, PurchaseRequestActionRequest review)
+    {
+        var request = GetPurchaseRequestsById(id) ?? throw new InvalidOperationException("Pedido não encontrado.");
+
+        if (request.PurchaseRequestStatus == PurchaseRequestStatus.InReview)
+            throw new InvalidOperationException("O pedido já está em revisão.");
+
+        var currentStep = request.ApprovalSteps
+            .Where(step => step.Status == ApprovalStepStatus.Pending)
+            .OrderBy(step => step.Sequence)
+            .FirstOrDefault() ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
+
+        if (currentStep.ApproverRole != review.ApproverRole)
+            throw new InvalidOperationException($"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
+
+        request.PurchaseRequestStatus = PurchaseRequestStatus.InReview;
+        
+        foreach (var step in request.ApprovalSteps)
+        {
+            currentStep.Status = ApprovalStepStatus.Pending;
+            currentStep.ActionBy = null;
+            currentStep.ActionAt = null;
+            currentStep.Comments = null;
+        }
+
+        AddHistory(
+            request,
+            HistoryActionType.ReviewRequested,
+            review.ActionBy,
+            review.ApproverRole,
+            review.Comments ?? $"Revisão solicitada por {review.ApproverRole}.");
+        
         request.UpdatedAt = DateTime.UtcNow;
         return request;
     }

@@ -11,7 +11,7 @@ public class PurchaseRequest
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public required ICollection<PurchaseRequestItem> Items { get; set; }
+    public required ICollection<PurchaseRequestItem> Items { get; set; } = [];
     public ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];
     public ICollection<PurchaseRequestHistory> History { get; set; } = [];
 }

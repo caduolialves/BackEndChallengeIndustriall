@@ -1,26 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Service;
+using PurchaseOrderChallenge.Models.DTOs;
 
 namespace PurchaseOrderChallenge.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PurchaseOrderController : ControllerBase
+    public class PurchaseOrderController(
+        PurchaseOrderService purchaseOrderService
+    ) : ControllerBase
     {
-        
+        private readonly PurchaseOrderService _purchaseOrderService = purchaseOrderService;
 
         [HttpGet]
         public ActionResult<PurchaseRequest> Get()
         {
-            var _orders = new PurchaseOrderService().GetAllPurchaseRequests();
+            var _orders = _purchaseOrderService.GetAllPurchaseRequests();
             return Ok(_orders);
         }
 
         [HttpGet("{id}")]
         public ActionResult<PurchaseRequest> GetById(int id)
         {
-            var order = new PurchaseOrderService().GetPurchaseRequestsById(id);
+            var order = _purchaseOrderService.GetPurchaseRequestsById(id);
 
             if (order is null)
                 return NotFound();
@@ -36,7 +39,7 @@ namespace PurchaseOrderChallenge.Controllers
             {
                 return BadRequest("O pedido precisa ter ao menos um item.");
             }
-            new PurchaseOrderService().CreatePurchaseRequest(request);
+            _purchaseOrderService.CreatePurchaseRequest(request);
             
             return CreatedAtAction(
                 nameof(GetById),
@@ -46,11 +49,11 @@ namespace PurchaseOrderChallenge.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        public ActionResult<PurchaseRequest> Approve(int id, ApprovePurchaseRequest approval)
+        public ActionResult<PurchaseRequest> Approve(int id, PurchaseRequestActionRequest approval)
         {
             try
             {
-                var order = new PurchaseOrderService().ApprovePurchaseRequest(id, approval);
+                var order = _purchaseOrderService.ApprovePurchaseRequest(id, approval);
                 return Ok(order);
             }
             catch (InvalidOperationException ex) when (ex.Message == "Pedido não encontrado.")
@@ -62,5 +65,25 @@ namespace PurchaseOrderChallenge.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPut("{id}/review")]
+        public ActionResult<PurchaseRequest> Review(int id, PurchaseRequestActionRequest review)
+        {
+            try
+            {
+                var order = _purchaseOrderService.ReviewPurchaseRequest(id, review);
+                return Ok(order);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "Pedido não encontrado.")
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        
     }
 }

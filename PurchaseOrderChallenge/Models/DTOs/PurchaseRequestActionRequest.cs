@@ -1,8 +1,8 @@
 using PurchaseOrderChallenge.Models.Enums;
 
-namespace PurchaseOrderChallenge.Models;
+namespace PurchaseOrderChallenge.Models.DTOs;
 
-public class ApprovePurchaseRequest
+public class PurchaseRequestActionRequest
 {
     public UserRole ApproverRole { get; set; }
     public required string ActionBy { get; set; }
