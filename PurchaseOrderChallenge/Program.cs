@@ -14,6 +14,7 @@ builder.Services.AddDbContext<PurchaseOrderDbContext>(options =>
 
 builder.Services.AddScoped<PurchaseOrderService>();
 builder.Services.AddScoped<PurchaseRequestRepository>();
+builder.Services.AddScoped<ApprovalStepsRepository>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

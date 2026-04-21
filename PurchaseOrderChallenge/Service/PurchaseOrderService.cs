@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Models.Enums;
 using PurchaseOrderChallenge.Models.DTOs;
@@ -9,15 +7,16 @@ namespace PurchaseOrderChallenge.Service;
 
 public class PurchaseOrderService
 {
-    private static readonly List<PurchaseRequest> _orders = new();
-
-    private readonly PurchaseOrderDbContext _context;
     private readonly PurchaseRequestRepository _purchaseRequestRepository;
+    private readonly ApprovalStepsRepository _approvalStepsRepository;
 
+    private readonly PurchaseRequestHistoryRepository _purchaseRequestHistoryRepository;
 
-    public PurchaseOrderService(PurchaseRequestRepository repository)
+    public PurchaseOrderService(PurchaseRequestRepository repository, ApprovalStepsRepository approvalStepsRepository, PurchaseRequestHistoryRepository purchaseRequestHistoryRepository)
     {
         _purchaseRequestRepository = repository;
+        _approvalStepsRepository = approvalStepsRepository;
+        _purchaseRequestHistoryRepository = purchaseRequestHistoryRepository;
     }
 
     /// <summary>
@@ -39,7 +38,14 @@ public class PurchaseOrderService
         SetPendingStatusByUserRole(request, UserRole.Supply);
 
         // Registra a criação do pedido no histórico para rastreabilidade.
-        AddHistory(request, HistoryActionType.Created, request.RequesterName, UserRole.Requester, "Pedido criado.");
+        _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
+        {
+            PurchaseRequestId = request.Id,
+            ActionType = HistoryActionType.Created,
+            PerformedBy = request.RequesterName,
+            PerformedByRole = UserRole.Requester,
+            Comments = "Pedido criado."
+        });
 
         _purchaseRequestRepository.Insert(request);
     }
@@ -79,40 +85,40 @@ public class PurchaseOrderService
             throw new InvalidOperationException("O pedido está em revisão e não pode ser aprovado.");
 
         // RN4: a etapa atual é sempre a primeira pendente na sequência de aprovação.
-        var currentStep = request.ApprovalSteps
-            .Where(step => step.Status == ApprovalStepStatus.Pending)
-            .OrderBy(step => step.Sequence)
-            .FirstOrDefault() ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
+        var currentStep = _approvalStepsRepository.GetByStatus(request.Id, ApprovalStepStatus.Pending) ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
 
         // Garante que o aprovador informado corresponde exatamente à etapa atual.
         if (currentStep.ApproverRole != approval.ApproverRole)
             throw new InvalidOperationException($"A próxima aprovação deve ser feita por {currentStep.ApproverRole}.");
 
         // Marca a etapa atual como aprovada e registra quem executou a ação.
-        currentStep.Status = ApprovalStepStatus.Approved;
-        currentStep.ActionBy = approval.ActionBy;
-        currentStep.ActionAt = DateTime.UtcNow;
-        currentStep.Comments = approval.Comments;
+        CreateNewCurrentStep(approval, currentStep, ApprovalStepStatus.Approved);
 
         // Mantém um histórico separado das etapas para auditoria do pedido.
-        AddHistory(
-            request,
-            HistoryActionType.Approved,
-            approval.ActionBy,
-            approval.ApproverRole,
-            approval.Comments ?? $"Aprovado por {approval.ApproverRole}.");
+        _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
+        {
+            PurchaseRequestId = request.Id,
+            ActionType = HistoryActionType.Approved,
+            PerformedBy = approval.ActionBy,
+            PerformedByRole = approval.ApproverRole,
+            Comments = approval.Comments ?? $"Aprovado por {approval.ApproverRole}."
+        });
 
         // Depois da aprovação, verifica se ainda existe alguma etapa pendente.
-        var nextStep = request.ApprovalSteps
-            .Where(step => step.Status == ApprovalStepStatus.Pending)
-            .OrderBy(step => step.Sequence)
-            .FirstOrDefault();
+        var nextStep = _approvalStepsRepository.GetByStatus(request.Id, ApprovalStepStatus.Pending);
 
         // Se não houver próxima etapa, todas as alçadas exigidas já aprovaram o pedido.
         if (nextStep is null)
         {
             request.PurchaseRequestStatus = PurchaseRequestStatus.Approved;
-            AddHistory(request, HistoryActionType.Completed, approval.ActionBy, approval.ApproverRole, "Pedido aprovado em todas as alçadas.");
+            _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
+            {
+                PurchaseRequestId = request.Id,
+                ActionType = HistoryActionType.Completed,
+                PerformedBy = approval.ActionBy,
+                PerformedByRole = approval.ApproverRole,
+                Comments = "Pedido aprovado em todas as alçadas."
+            });
         }
         else
         {
@@ -139,10 +145,7 @@ public class PurchaseOrderService
             throw new InvalidOperationException("O pedido já está em revisão.");
 
         // A revisão também respeita a sequência: só o responsável pela etapa atual pode solicitá-la.
-        var currentStep = request.ApprovalSteps
-            .Where(step => step.Status == ApprovalStepStatus.Pending)
-            .OrderBy(step => step.Sequence)
-            .FirstOrDefault() ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
+        var currentStep = _approvalStepsRepository.GetByStatus(request.Id, ApprovalStepStatus.Pending) ?? throw new InvalidOperationException("O pedido não possui etapa pendente de aprovação.");
 
         // Bloqueia revisão por um papel que ainda não recebeu o pedido.
         if (currentStep.ApproverRole != review.ApproverRole)
@@ -154,24 +157,24 @@ public class PurchaseOrderService
         // Remove decisões anteriores das etapas para que o fluxo recomece após a correção.
         foreach (var step in request.ApprovalSteps)
         {
-            step.Status = ApprovalStepStatus.Pending;
-            step.ActionBy = null;
-            step.ActionAt = null;
-            step.Comments = null;
+            ResetCurrentStep(step);
         }
 
         // Registra quem pediu a revisão e a justificativa informada.
-        AddHistory(
-            request,
-            HistoryActionType.ReviewRequested,
-            review.ActionBy,
-            review.ApproverRole,
-            review.Comments ?? $"Revisão solicitada por {review.ApproverRole}.");
+         _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
+        {
+            PurchaseRequestId = request.Id,
+            ActionType = HistoryActionType.ReviewRequested,
+            PerformedBy = review.ActionBy,
+            PerformedByRole = review.ApproverRole,
+            Comments = review.Comments ?? $"Revisão solicitada por {review.ApproverRole}."
+        });
         
         request.UpdatedAt = DateTime.UtcNow;
 
         return _purchaseRequestRepository.Update(request);
     }
+
 
     /// <summary>
     /// Reapresenta um pedido que estava em revisão, atualizando seus dados editáveis,
@@ -198,8 +201,16 @@ public class PurchaseOrderService
         currentRequest.UpdatedAt = DateTime.UtcNow;
 
         SetPendingStatusByUserRole(currentRequest, UserRole.Supply);
-        AddHistory(currentRequest, HistoryActionType.Resubmitted, currentRequest.RequesterName, UserRole.Requester, "Pedido revisado.");
 
+        _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
+        {
+            PurchaseRequestId = currentRequest.Id,
+            ActionType = HistoryActionType.Resubmitted,
+            PerformedBy = currentRequest.RequesterName,
+            PerformedByRole = UserRole.Requester,
+            Comments = "Pedido revisado."
+        });
+        
         return _purchaseRequestRepository.Update(currentRequest);
     }
 
@@ -224,21 +235,22 @@ public class PurchaseOrderService
         request.PurchaseRequestStatus = PurchaseRequestStatus.Cancelled;
 
         // Etapas ainda pendentes também são encerradas para não restar aprovação aberta.
-        foreach (var step in request.ApprovalSteps.Where(step => step.Status == ApprovalStepStatus.Pending))
+
+
+        foreach (var step in _approvalStepsRepository.GetAllByStatus(request.Id, ApprovalStepStatus.Pending))
         {
-            step.Status = ApprovalStepStatus.Cancelled;
-            step.ActionBy = cancellation.ActionBy;
-            step.ActionAt = DateTime.UtcNow;
-            step.Comments = cancellation.Comments;
+            CreateNewCurrentStep(cancellation, step, ApprovalStepStatus.Cancelled);
         }
 
-        // Registra quem cancelou e a justificativa informada.
-        AddHistory(
-            request,
-            HistoryActionType.Cancelled,
-            cancellation.ActionBy,
-            cancellation.ApproverRole,
-            cancellation.Comments ?? $"Pedido cancelado por {cancellation.ApproverRole}.");
+        // Registra quem cancelou e a justificativa informada.        
+        _purchaseRequestHistoryRepository.Insert(new PurchaseRequestHistory
+        {
+            PurchaseRequestId = request.Id,
+            ActionType = HistoryActionType.Cancelled,
+            PerformedBy = cancellation.ActionBy,
+            PerformedByRole = cancellation.ApproverRole,
+            Comments = cancellation.Comments ?? $"Pedido cancelado por {cancellation.ApproverRole}."
+        });
 
         request.UpdatedAt = DateTime.UtcNow;
 
@@ -304,24 +316,19 @@ public class PurchaseOrderService
         };
     }
 
-    /// <summary>
-    /// Adiciona um registro de auditoria ao histórico do pedido.
-    /// </summary>
-    private static void AddHistory(
-        PurchaseRequest request,
-        HistoryActionType actionType,
-        string performedBy,
-        UserRole performedByRole,
-        string comments)
+    private static void CreateNewCurrentStep(PurchaseRequestActionRequest actionRequest, ApprovalStep currentStep, ApprovalStepStatus status)
     {
-        request.History.Add(new PurchaseRequestHistory
-        {
-            PurchaseRequestId = request.Id,
-            ActionType = actionType,
-            PerformedBy = performedBy,
-            PerformedByRole = performedByRole,
-            Comments = comments,
-            CreatedAt = DateTime.UtcNow
-        });
+        currentStep.Status = status;
+        currentStep.ActionBy = actionRequest.ActionBy;
+        currentStep.ActionAt = DateTime.UtcNow;
+        currentStep.Comments = actionRequest.Comments;
+    }
+
+    private static void ResetCurrentStep(ApprovalStep step)
+    {
+        step.Status = ApprovalStepStatus.Pending;
+        step.ActionBy = null;
+        step.ActionAt = null;
+        step.Comments = null;
     }
 }
