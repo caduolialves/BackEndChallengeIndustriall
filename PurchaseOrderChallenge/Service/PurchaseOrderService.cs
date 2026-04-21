@@ -3,6 +3,7 @@ using PurchaseOrderChallenge.Data;
 using PurchaseOrderChallenge.Models;
 using PurchaseOrderChallenge.Models.Enums;
 using PurchaseOrderChallenge.Models.DTOs;
+using PurchaseOrderChallenge.Repository;
 
 namespace PurchaseOrderChallenge.Service;
 
@@ -11,10 +12,12 @@ public class PurchaseOrderService
     private static readonly List<PurchaseRequest> _orders = new();
 
     private readonly PurchaseOrderDbContext _context;
+    private readonly PurchaseRequestRepository _purchaseRequestRepository;
 
-    public PurchaseOrderService(PurchaseOrderDbContext context)
+
+    public PurchaseOrderService(PurchaseRequestRepository repository)
     {
-        _context = context;
+        _purchaseRequestRepository = repository;
     }
 
     /// <summary>
@@ -38,8 +41,7 @@ public class PurchaseOrderService
         // Registra a criação do pedido no histórico para rastreabilidade.
         AddHistory(request, HistoryActionType.Created, request.RequesterName, UserRole.Requester, "Pedido criado.");
 
-        _context.PurchaseRequests.Add(request);
-        _context.SaveChanges();
+        _purchaseRequestRepository.Insert(request);
     }
 
     /// <summary>
@@ -47,7 +49,7 @@ public class PurchaseOrderService
     /// </summary>
     public IEnumerable<PurchaseRequest> GetAllPurchaseRequests()
     {
-        return _context.PurchaseRequests;
+        return _purchaseRequestRepository.GetAll();
     }
 
     /// <summary>
@@ -55,11 +57,7 @@ public class PurchaseOrderService
     /// </summary>
     public PurchaseRequest? GetPurchaseRequestsById(int id)
     {
-        return _context.PurchaseRequests
-            .Include(r => r.ApprovalSteps)
-            .Include(r => r.History)
-            .Include(r => r.Items)
-            .FirstOrDefault(x => x.Id == id);
+        return _purchaseRequestRepository.GetById(id);
     }
 
 
@@ -124,9 +122,7 @@ public class PurchaseOrderService
 
         request.UpdatedAt = DateTime.UtcNow;
 
-        _context.PurchaseRequests.Update(request);
-        _context.SaveChanges();
-        return request;
+        return _purchaseRequestRepository.Update(request);
     }
 
     /// <summary>
@@ -174,9 +170,7 @@ public class PurchaseOrderService
         
         request.UpdatedAt = DateTime.UtcNow;
 
-        _context.PurchaseRequests.Update(request);
-        _context.SaveChanges();
-        return request;
+        return _purchaseRequestRepository.Update(request);
     }
 
     /// <summary>
@@ -206,10 +200,7 @@ public class PurchaseOrderService
         SetPendingStatusByUserRole(currentRequest, UserRole.Supply);
         AddHistory(currentRequest, HistoryActionType.Resubmitted, currentRequest.RequesterName, UserRole.Requester, "Pedido revisado.");
 
-        _context.PurchaseRequests.Update(currentRequest);
-        _context.SaveChanges();
-
-        return currentRequest;
+        return _purchaseRequestRepository.Update(currentRequest);
     }
 
     /// <summary>
@@ -251,9 +242,7 @@ public class PurchaseOrderService
 
         request.UpdatedAt = DateTime.UtcNow;
 
-        _context.PurchaseRequests.Update(request);
-        _context.SaveChanges();
-        return request;
+        return _purchaseRequestRepository.Update(request);
     }
 
     /// <summary>
