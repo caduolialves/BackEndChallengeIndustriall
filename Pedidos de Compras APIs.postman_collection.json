@@ -1,0 +1,425 @@
+{
+  "info": {
+    "_postman_id": "70cdaf4b-b859-4005-914e-e2acf766c405",
+    "name": "Pedidos de Compras APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "31783590"
+  },
+  "item": [
+    {
+      "name": "Purchase Order Apis",
+      "item": [
+        {
+          "name": "/api/purchaseorder",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5014/api/purchaseorder",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "purchaseorder"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5014/api/purchaseorder/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "purchaseorder",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"requesterName\": \"Carlos\",\r\n  \"items\": [\r\n    {\r\n      \"productName\": \"bala\",\r\n      \"quantity\": 3,\r\n      \"unitPrice\": 10.04\r\n    }\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/purchaseorder",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "purchaseorder"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/approve",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"approverRole\": \"Supply\",\r\n\"actionBy\": \"Joao\",\r\n\"comments\": \"Pedido aprovado pelo Suprimentos\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/approve",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/approve",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"approverRole\": \"Manager\",\r\n\"actionBy\": \"Maria\",\r\n\"comments\": \"Pedido aprovado pelo Gestor\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/approve",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/approve",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"approverRole\": \"Director\",\r\n\"actionBy\": \"Ana\",\r\n\"comments\": \"Pedido aprovado pelo Diretor\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/approve",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/review",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"approverRole\": \"Supply\",\r\n\"actionBy\": \"Joao\",\r\n\"comments\": \"Pedido de revisão solicitado por suprimentos.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/review",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/review",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"approverRole\": \"Manager\",\r\n\"actionBy\": \"Maria\",\r\n\"comments\": \"Pedido de revisão solicitado pelo Gestor.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/review",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/review",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"approverRole\": \"Manager\",\r\n\"actionBy\": \"Ana\",\r\n\"comments\": \"Pedido de revisão solicitado pelo Diretor.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/review",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/resubmit",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"requesterName\": \"Carlos\",\r\n    \"items\": [\r\n        {\r\n            \"productName\": \"Celular\",\r\n            \"quantity\": 2,\r\n            \"unitPrice\": 500.00\r\n        }\r\n    ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/resubmit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "resubmit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/cancel",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"approverRole\": \"Supply\",\r\n  \"actionBy\": \"João\",\r\n  \"comments\": \"Pedido cancelado por suprimentos.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/cancel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/cancel",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"approverRole\": \"Manager\",\r\n  \"actionBy\": \"Maria\",\r\n  \"comments\": \"Pedido cancelado pelo Gestor.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/cancel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/api/purchaseorder/{id}/cancel",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"approverRole\": \"Director\",\r\n  \"actionBy\": \"João\",\r\n  \"comments\": \"Pedido cancelado pelo Diretor.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5014/api/PurchaseOrder/1/cancel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5014",
+              "path": [
+                "api",
+                "PurchaseOrder",
+                "1",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
