@@ -80,7 +80,7 @@ Cardinalidades:
 ```text
 PurchaseRequest 1 ---- 1..* PurchaseRequestItem
 PurchaseRequest 1 ---- 1..3 ApprovalStep
-PurchaseRequest 1 ---- 0..* PurchaseRequestHistory
+PurchaseRequest 1 ---- 1..* PurchaseRequestHistory
 ```
 
 ## Banco De Dados
@@ -254,7 +254,6 @@ Content-Type: application/json
 Papéis válidos:
 
 ```text
-Requester
 Supply
 Manager
 Director
@@ -336,7 +335,7 @@ O desafio solicita:
 O modelo implementado tem como núcleo:
 
 ```text
-PurchaseRequest
+  PurchaseRequest
   Items
   ApprovalSteps
   History
