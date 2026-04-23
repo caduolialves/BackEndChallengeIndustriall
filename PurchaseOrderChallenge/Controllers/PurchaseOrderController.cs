@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PurchaseOrderChallenge.Models;
-using PurchaseOrderChallenge.Service.Interfaces;
 using PurchaseOrderChallenge.Models.DTOs;
+using PurchaseOrderChallenge.Service.Interfaces;
 
 namespace PurchaseOrderChallenge.Controllers
 {
@@ -13,13 +13,19 @@ namespace PurchaseOrderChallenge.Controllers
     {
         private readonly IPurchaseOrderService _purchaseOrderService = purchaseOrderService;
 
+        /// <summary>
+        /// Lista todos os pedidos de compra cadastrados.
+        /// </summary>
         [HttpGet]
         public ActionResult<PurchaseRequest> Get()
         {
-            var _orders = _purchaseOrderService.GetAllPurchaseRequests();
-            return Ok(_orders);
+            var orders = _purchaseOrderService.GetAllPurchaseRequests();
+            return Ok(orders);
         }
 
+        /// <summary>
+        /// Busca um pedido de compra pelo identificador informado na rota.
+        /// </summary>
         [HttpGet("{id}")]
         public ActionResult<PurchaseRequest> GetById(int id)
         {
@@ -31,16 +37,21 @@ namespace PurchaseOrderChallenge.Controllers
             return Ok(order);
         }
 
+        /// <summary>
+        /// Cria um novo pedido de compra.
+        /// RN1: valida que o pedido possui pelo menos um item antes de enviar para o serviço.
+        /// </summary>
         [HttpPost]
         public ActionResult<PurchaseRequest> Post(PurchaseRequest request)
         {
-            /// RN1: Validação de pelo menos um item no pedido, caso contrário retorna BadRequest.
+            // RN1: um pedido de compra deve conter pelo menos um item.
             if (request.Items == null || request.Items.Count == 0)
             {
                 return BadRequest("O pedido precisa ter ao menos um item.");
             }
+
             _purchaseOrderService.CreatePurchaseRequest(request);
-            
+
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = request.Id },
@@ -48,9 +59,13 @@ namespace PurchaseOrderChallenge.Controllers
             );
         }
 
+        /// <summary>
+        /// Aprova a etapa atual do pedido.
+        /// RN4 e RN7 são validadas no serviço.
+        /// </summary>
         [HttpPut("{id}/approve")]
         public ActionResult<PurchaseRequest> Approve(
-            int id, 
+            int id,
             PurchaseRequestActionRequest approval)
         {
             try
@@ -68,9 +83,13 @@ namespace PurchaseOrderChallenge.Controllers
             }
         }
 
+        /// <summary>
+        /// Solicita revisão do pedido na etapa atual.
+        /// RN5 e RN6 são aplicadas no serviço.
+        /// </summary>
         [HttpPut("{id}/review")]
         public ActionResult<PurchaseRequest> Review(
-            int id, 
+            int id,
             PurchaseRequestActionRequest review)
         {
             try
@@ -88,9 +107,13 @@ namespace PurchaseOrderChallenge.Controllers
             }
         }
 
+        /// <summary>
+        /// Reenvia um pedido que estava em revisão para reiniciar o fluxo de aprovação.
+        /// RN5 e RN6 são aplicadas no serviço.
+        /// </summary>
         [HttpPut("{id}/resubmit")]
         public ActionResult<PurchaseRequest> Resubmit(
-            int id, 
+            int id,
             PurchaseRequest resubmit)
         {
             try
@@ -108,9 +131,13 @@ namespace PurchaseOrderChallenge.Controllers
             }
         }
 
+        /// <summary>
+        /// Cancela um pedido de compra.
+        /// RN8 e RN6 são aplicadas no serviço.
+        /// </summary>
         [HttpPut("{id}/cancel")]
         public ActionResult<PurchaseRequest> Cancel(
-            int id, 
+            int id,
             PurchaseRequestActionRequest cancellation)
         {
             try

@@ -10,6 +10,10 @@ public class PurchaseOrderDbContext(DbContextOptions<PurchaseOrderDbContext> opt
     public DbSet<ApprovalStep> ApprovalSteps => Set<ApprovalStep>();
     public DbSet<PurchaseRequestHistory> PurchaseRequestHistories => Set<PurchaseRequestHistory>();
 
+    /// <summary>
+    /// Configura o modelo relacional usado pelo Entity Framework Core,
+    /// incluindo chaves, tamanhos de campos, conversão de enums e relacionamentos.
+    /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

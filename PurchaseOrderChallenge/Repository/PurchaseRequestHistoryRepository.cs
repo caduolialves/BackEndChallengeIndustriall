@@ -9,6 +9,9 @@ namespace PurchaseOrderChallenge.Repository
     {
         private readonly PurchaseOrderDbContext _context = context;
 
+        /// <summary>
+        /// Persiste um registro de histórico do pedido no banco.
+        /// </summary>
         public void Insert(PurchaseRequestHistory history)
         {
             _context.PurchaseRequestHistories.Add(history);
